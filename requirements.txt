@@ -1,0 +1,8 @@
+# AegisMimic dependencies
+# ─────────────────────────────────────────────────────────────────────
+# inotify.adapters is provided by the 'inotify' package (not 'pyinotify')
+inotify==0.2.10
+pyyaml>=6.0
+
+# Optional — install for eBPF/fanotify future enhancement:
+# bcc is system-installed, not pip:  apt install python3-bpfcc

@@ -1,0 +1,117 @@
+# ╔══════════════════════════════════════════════════════════════╗
+# ║           AegisMimic — Authorization Policy                  ║
+# ║  "I Don't Want To Get Hacked, So I'll Max Out My Camouflage!"║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# WHITELIST semantics: any process NOT matching a rule is UNAUTHORIZED.
+# Secure-by-default: delete this file → DENY-ALL mode activates.
+#
+# ── Rule logic ───────────────────────────────────────────────────────
+#   require_all: false (default) → matches if ANY condition is true  (OR)
+#   require_all: true            → ALL conditions must match         (AND)
+#
+# ── Fields ───────────────────────────────────────────────────────────
+#   exe_paths            : exact binary path(s)
+#   exe_patterns         : glob patterns  (e.g. "/usr/bin/*")
+#   users                : allowed usernames  (case-insensitive)
+#   parent_exe_patterns  : required parent process pattern(s)
+#   require_all          : AND-mode across all conditions above
+#
+# ── What gets BLOCKED by default ────────────────────────────────────
+#   · Any process not listed below
+#   · /tmp/* or /dev/shm/* binaries  (common malware drop paths)
+#   · curl, wget touching your secrets  (no reason they should)
+#   · Python spawned by cron or a web server
+#   · Any process owned by www-data, nobody, daemon
+# ─────────────────────────────────────────────────────────────────────
+
+authorized_rules:
+
+  # ── Your interactive shell sessions ────────────────────────────────
+  - name: "interactive-shells"
+    exe_patterns:
+      - "/bin/bash"
+      - "/bin/zsh"
+      - "/bin/sh"
+      - "/usr/bin/bash"
+      - "/usr/bin/zsh"
+    users:
+      - "root"
+      - "youruser"       # ← CHANGE THIS to your actual Linux username
+
+  # ── Standard file utilities (root only) ───────────────────────────
+  - name: "root-file-tools"
+    exe_patterns:
+      - "/bin/ls"
+      - "/usr/bin/ls"
+      - "/bin/cat"
+      - "/usr/bin/cat"
+      - "/usr/bin/stat"
+      - "/usr/bin/file"
+      - "/bin/cp"
+      - "/usr/bin/cp"
+    users:
+      - "root"
+
+  # ── Your text editor ──────────────────────────────────────────────
+  - name: "editor"
+    exe_patterns:
+      - "/usr/bin/vim"
+      - "/usr/bin/nvim"
+      - "/usr/bin/nano"
+      - "/usr/bin/micro"
+      - "/snap/bin/nvim"
+    users:
+      - "root"
+      - "youruser"       # ← CHANGE THIS
+
+  # ── Backup agent ──────────────────────────────────────────────────
+  # Restic, Borg — only from the backup user
+  - name: "backup-agent"
+    exe_patterns:
+      - "/usr/bin/restic"
+      - "/usr/local/bin/restic"
+      - "/usr/bin/borg"
+      - "/usr/local/bin/borg"
+    users:
+      - "root"
+      - "backup"
+
+  # ── Authorized Python — AND rule ──────────────────────────────────
+  # Python is allowed ONLY when launched directly from your shell.
+  # Python spawned by cron, systemd, or a web process → BLOCKED.
+  - name: "python-from-shell-only"
+    exe_patterns:
+      - "/usr/bin/python3"
+      - "/usr/local/bin/python3"
+      - "/usr/bin/python"
+    parent_exe_patterns:
+      - "/bin/bash"
+      - "/bin/zsh"
+      - "/usr/bin/bash"
+      - "/usr/bin/zsh"
+    require_all: true    # Must be BOTH python AND launched from your shell
+
+  # ── AegisMimic itself ─────────────────────────────────────────────
+  # Prevent the daemon from triggering itself during startup file writes.
+  - name: "aegismimic-self"
+    exe_patterns:
+      - "/usr/bin/python3"
+      - "/usr/local/bin/python3"
+    users:
+      - "root"
+    parent_exe_patterns:
+      - "/bin/bash"
+      - "/usr/bin/bash"
+    require_all: true
+
+# ── To add Docker test shell access ──────────────────────────────────
+# Uncomment this block when testing inside a Docker container:
+#
+#  - name: "docker-test-shell"
+#    exe_patterns:
+#      - "/bin/bash"
+#      - "/bin/sh"
+#      - "/usr/bin/python3"
+#    users:
+#      - "root"

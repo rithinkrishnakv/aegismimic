@@ -1,0 +1,39 @@
+[Unit]
+Description=AegisMimic — Honey Directory Engine
+Documentation=https://github.com/yourorg/aegismimic
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/aegismimic
+
+# Core invocation — edit WATCH_DIR to your sensitive directory
+Environment="WATCH_DIR=/opt/aegismimic/honey"
+Environment="CONFIG=/etc/aegismimic/policy.yaml"
+Environment="LOG_FILE=/var/log/aegismimic/audit.log"
+Environment="SNAPSHOT_DIR=/var/log/aegismimic/snapshots"
+
+ExecStart=/usr/bin/python3 /opt/aegismimic/aegismimic.py \
+    --watch ${WATCH_DIR} \
+    --config ${CONFIG} \
+    --log-file ${LOG_FILE} \
+    --snapshot-dir ${SNAPSHOT_DIR}
+
+# Restart automatically on crash
+Restart=on-failure
+RestartSec=5s
+
+# Security hardening for the daemon process itself
+NoNewPrivileges=false
+PrivateTmp=false
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=aegismimic
+
+[Install]
+WantedBy=multi-user.target

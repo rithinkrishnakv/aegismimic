@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-syntax:
+    name: Lint & Syntax Check
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install inotify==0.2.10 pyyaml pyflakes
+
+      - name: Syntax check (ast.parse)
+        run: |
+          python3 -c "
+          import ast, sys, pathlib
+          files = list(pathlib.Path('.').rglob('*.py'))
+          failed = []
+          for f in files:
+              if any(skip in str(f) for skip in ['__pycache__', '.venv', 'venv']):
+                  continue
+              try:
+                  ast.parse(f.read_text())
+                  print(f'  OK  {f}')
+              except SyntaxError as e:
+                  print(f'  ERR {f}: {e}')
+                  failed.append(f)
+          if failed:
+              print(f'\n{len(failed)} file(s) failed syntax check.')
+              sys.exit(1)
+          print(f'\nAll {len(files)} files passed.')
+          "
+
+      - name: Pyflakes (unused imports / undefined names)
+        run: |
+          pyflakes aegismimic.py core/ audit/ || true
+
+      - name: Validate policy YAML
+        run: |
+          python3 -c "
+          import yaml
+          with open('config/policy.yaml') as f:
+              data = yaml.safe_load(f)
+          rules = data.get('authorized_rules', [])
+          print(f'Policy YAML valid: {len(rules)} rules found.')
+          "
+
+      - name: Import check (all modules loadable)
+        run: |
+          python3 -c "
+          import sys
+          sys.path.insert(0, '.')
+          from audit.event import SecurityEvent, EventType
+          from audit.logger import AuditLogger
+          from core.policy import PolicyEngine
+          from core.process import ProcessInspector
+          from core.alert import AlertManager, AlertConfig
+          from core.snapshot import SnapshotManager
+          print('All modules import cleanly.')
+          "
