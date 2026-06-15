@@ -1,6 +1,6 @@
 [Unit]
 Description=AegisMimic — Honey Directory Engine
-Documentation=https://github.com/yourorg/aegismimic
+Documentation=https://github.com/rithinkrishnakv/aegismimic
 After=network.target
 Wants=network.target
 
