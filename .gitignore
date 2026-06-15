@@ -13,7 +13,6 @@ env/
 
 # ── AegisMimic runtime files ──────────────────────────────────────────
 # Audit logs — contain sensitive forensic data, never commit
-audit/
 audit/*.log
 audit/*.ndjson
 

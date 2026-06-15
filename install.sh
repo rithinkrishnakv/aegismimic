@@ -100,7 +100,7 @@ info "Installing systemd service..."
 cat > "$SERVICE_FILE" << SERVICE
 [Unit]
 Description=AegisMimic — Honey Directory Engine
-Documentation=https://github.com/yourorg/aegismimic
+Documentation=https://github.com/rithinkrishnakv
 After=network.target
 
 [Service]

@@ -20,7 +20,7 @@ import pwd
 import time
 import logging
 from pathlib import Path
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
 log = logging.getLogger("process")

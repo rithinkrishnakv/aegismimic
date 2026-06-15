@@ -215,9 +215,6 @@ aegismimic/
 ├── aegismimic.py              Entry point, CLI
 ├── install.sh                 Production installer (systemd)
 ├── aegismimic.service         systemd unit file
-├── Dockerfile
-├── docker-compose.yml         Dev/test (container only)
-├── docker-compose.host.yml    Host protection via Docker
 ├── test_intruder.sh           Attacker simulation for testing
 ├── config/
 │   └── policy.yaml            Authorization whitelist
